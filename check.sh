@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# Prévient sur ntfy quand un VPS OVH d'au moins 8 Go est commandable sous Linux en France.
+# Prévient sur ntfy quand un VPS OVH (VPS-2 ou plus, au moins 8 Go) est commandable sous Linux en France.
 set -euo pipefail
 
 API="https://eu.api.ovh.com/1.0"
-MIN_RAM_GB="${MIN_RAM_GB:-8}"
 FRANCE='["eu-west-gra","eu-west-rbx","eu-west-sbg"]'
 
-# Le catalogue donne la mémoire par produit ; on n'en garde que les gammes VPS-n, hors zones locales (.LZ).
-plans=$(curl -fsS "$API/order/catalog/public/vps?ovhSubsidiary=FR" | jq -r --argjson min "$MIN_RAM_GB" '
+# Le catalogue donne la mémoire par produit ; on garde les gammes VPS-2 et plus, hors zones locales (.LZ).
+plans=$(curl -fsS "$API/order/catalog/public/vps?ovhSubsidiary=FR" | jq -r '
   (.products | map({key: .name, value: .blobs.technical.memory.size}) | from_entries) as $ram
   | .plans[]
-  | select((.planCode | test("^vps-20[0-9]{2}-model[0-9]+$")) and ($ram[.product] // 0) >= $min)
+  | select((.planCode | test("^vps-20[0-9]{2}-model([2-9]|[1-9][0-9])$")) and ($ram[.product] // 0) >= 8)
   | "\(.planCode)\t\(.invoiceName)"')
 
 found=""
