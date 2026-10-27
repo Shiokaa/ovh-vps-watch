@@ -1,0 +1,15 @@
+name: Stock VPS OVH
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash check.sh
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
